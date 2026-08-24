@@ -1,4 +1,4 @@
-module github.com/iamloonix/lastro
+module github.com/loonix/lastro
 
 go 1.26.3
 

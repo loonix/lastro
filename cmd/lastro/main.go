@@ -28,7 +28,7 @@ import (
 
 	"golang.org/x/crypto/curve25519"
 
-	"github.com/iamloonix/lastro/wire"
+	"github.com/loonix/lastro/wire"
 )
 
 const (
