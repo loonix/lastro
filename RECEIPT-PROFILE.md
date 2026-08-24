@@ -82,7 +82,10 @@ e.g. bol:c3efd641bfa0582f/git/bolina/90e46a5.../check/zig-build-test
 ```
 
 The commit SHA inside the resource is the freshness anchor detached receipts otherwise
-lack. Repo names are lowercased and sanitized to the grammar's charset.
+lack. Repo names are lowercased and sanitized to the grammar's charset. The path may carry
+the placeholder `{sha}`, which `prova run` substitutes with `git rev-parse HEAD` — derived
+by the tool itself, never from a hand-written CI variable, so the anchor cannot be forged
+by a typo (fase-3 acceptance criterion).
 
 ## 4. Verification (`prova verify`)
 

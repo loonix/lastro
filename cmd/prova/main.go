@@ -187,7 +187,12 @@ func cmdRun(args []string) int {
 		fmt.Fprintln(os.Stderr, "prova run: --key, --namespace and --path are required")
 		return verifyUsage
 	}
-	if err := validateResource(*namespace, *resPath); err != nil {
+	resolvedPath, err := resolveShaTemplate(*resPath, gitHead)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "prova run: %v\n", err)
+		return verifyUsage
+	}
+	if err := validateResource(*namespace, resolvedPath); err != nil {
 		fmt.Fprintf(os.Stderr, "prova run: %v\n", err)
 		return verifyUsage
 	}
@@ -198,7 +203,7 @@ func cmdRun(args []string) int {
 	}
 	priv := ed25519.NewKeyFromSeed(seed)
 	pub := priv.Public().(ed25519.PublicKey)
-	resource := "bol:" + wire.Fingerprint(pub) + "/" + *namespace + "/" + *resPath
+	resource := "bol:" + wire.Fingerprint(pub) + "/" + *namespace + "/" + resolvedPath
 	if len(resource) > wire.MaxResource {
 		fmt.Fprintln(os.Stderr, "prova run: resource id exceeds 256 bytes")
 		return verifyUsage
@@ -284,6 +289,40 @@ func cmdRun(args []string) int {
 	fmt.Fprintf(os.Stderr, "prova: receipt %s · %s · exit %d · %d bytes observed · digest %s…\n",
 		*outPath, resource, exitCode, len(captured), hex.EncodeToString(f.Digest[:8]))
 	return exitCode
+}
+
+// resolveShaTemplate replaces every "{sha}" in the path with the current
+// git HEAD commit, derived from git itself — never from a hand-written
+// variable (fase-3 acceptance criterion: a receipt's freshness anchor
+// must not be forgeable by a typo'd CI variable). The substituted value
+// is validated as lowercase hex before use; the final path still passes
+// the full §8.4 grammar check.
+func resolveShaTemplate(p string, headFn func() (string, error)) (string, error) {
+	if !strings.Contains(p, "{sha}") {
+		return p, nil
+	}
+	raw, err := headFn()
+	if err != nil {
+		return "", fmt.Errorf("--path contains {sha} but git HEAD is unavailable: %v", err)
+	}
+	sha := strings.ToLower(strings.TrimSpace(raw))
+	if len(sha) < 7 || len(sha) > 64 {
+		return "", fmt.Errorf("git HEAD %q is not a commit sha", sha)
+	}
+	for _, c := range sha {
+		if !(c >= '0' && c <= '9' || c >= 'a' && c <= 'f') {
+			return "", fmt.Errorf("git HEAD %q is not hex", sha)
+		}
+	}
+	return strings.ReplaceAll(p, "{sha}", sha), nil
+}
+
+func gitHead() (string, error) {
+	out, err := exec.Command("git", "rev-parse", "HEAD").Output()
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
 }
 
 // validateResource enforces the SPEC §8.4 grammar.
