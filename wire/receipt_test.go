@@ -53,7 +53,7 @@ func mintReceipt(t *testing.T, executor identity, resource string) []byte {
 	t.Helper()
 	f := SpanFields{Version: 2, ResourceID: []byte(resource), MethodID: MethodSubprocess, Volatility: VolatilityVolatile, ObservedAt: 1_700_000_100_000}
 	copy(f.Executor[:], executor.pub)
-	f.Digest = Blake2s256([]byte("observed output\n[prova] exit-status=0\n"))
+	f.Digest = Blake2s256([]byte("observed output\n[lastro] exit-status=0\n"))
 	w, err := BuildSpan(&f, executor.priv)
 	if err != nil {
 		t.Fatalf("BuildSpan: %v", err)

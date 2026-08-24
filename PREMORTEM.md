@@ -1,8 +1,11 @@
 # Premortem — written before the first line of code
 
-**Date:** 2026-08-24 · **Product:** **Prova** — signed receipts for AI/CI work over the
-Bolina protocol *(named 2026-08-24 after the risk-5 collision check; "attest" was the
-working name and was rejected for colliding with GitHub's `gh attestation` vocabulary)* · **Exercise:** it is six months from now and this project is dead
+**Date:** 2026-08-24 · **Product:** **Lastro** — signed receipts for AI/CI work over the
+Bolina protocol. *Naming history, kept honest: "attest" (working name) rejected for
+colliding with GitHub's `gh attestation`; "Prova" chosen and then rejected the same day
+when deeper diligence found an active AI product (FounderDive's Prova), the prova/prova
+GitHub org, and Prova Software; "Lastro" (ballast/backing — "uma afirmação sem lastro" =
+an unbacked claim) checked clean and needs no domain.* · **Exercise:** it is six months from now and this project is dead
 or worse-than-dead (half-alive, teaching people that receipts rot). These are the ways it
 happened, ranked by how likely I believe each one is, each with the earliest symptom and the
 mitigation now baked into the plan. The discipline is Bolina's own: every failure records a
@@ -102,11 +105,14 @@ tool that at first glance does the same thing but needs its own CA, its own bina
   confidence arithmetic** (this agent's statement is backed by this observation, worth at most
   X) — plus human-signed byte-exact authority at L3, vendor-neutral, no platform dependency.
   If that paragraph cannot be written crisply, that is a thesis problem to face, not defer.
-- **Working name "attest" rejected; public name decided: Prova** (2026-08-24). Collision
-  check across Prova/Aval/Lacre/Selo: Prova clean (nearest neighbour Prove.com, identity
-  verification, different space); Aval taken by an active OSS project; Lacre is an existing
-  security-adjacent GitHub org; Selo phonetically collides with Silo, an agent tool.
-  Remaining due-diligence before repo-public: domain and trademark pass.
+- **Public name decided: Lastro** (2026-08-24, third and final). The path that got here:
+  "attest" rejected (GitHub `gh attestation` collision); Prova chosen from the
+  Prova/Aval/Lacre/Selo shortlist, then rejected the same day when deeper diligence found
+  an active AI product (FounderDive's Prova), the prova/prova GitHub org and Prova
+  Software — the first search was too narrow, a lesson recorded here on purpose. Lastro
+  checked clean in the dev/AI space; short candidates "prf"/"prv" were vetoed (PRF is a
+  loaded cryptography term; PRV is unsearchable). No domain is required — the tool lives
+  on GitHub like jq/fzf; a domain, if ever wanted, gates nothing.
 - Interop, not rivalry: emitting a Sigstore/in-toto-compatible export was already on the
   roadmap from the HN exercise; it turns the incumbent into a distribution channel.
 

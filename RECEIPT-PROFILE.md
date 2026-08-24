@@ -1,12 +1,12 @@
-# Receipt Profile — what a Prova receipt is and is not
+# Receipt Profile — what a Lastro receipt is and is not
 
 **Status:** normative for this repo · **Wire format:** Bolina SPEC §7.1, unmodified ·
 **Conformance:** `wire/testdata/vectors.json` (frozen, provenance recorded)
 
 A receipt is a **Bolina Span**: a signed record that a specific observation was actually
-made by a specific executor. The wire bytes are SPEC bytes — a Prova receipt parses in any
+made by a specific executor. The wire bytes are SPEC bytes — a Lastro receipt parses in any
 conformant Bolina implementation and vice versa. This document defines the *profile*: how
-spans are used detached from a mesh, what `prova run` captures, and what a verified receipt
+spans are used detached from a mesh, what `lastro run` captures, and what a verified receipt
 does and does not prove.
 
 ## 1. The single deviation: detached origin
@@ -28,19 +28,19 @@ format change. Consequences, stated honestly:
   observation. Point-in-time evidence, permanently.
 - A detached receipt fed into a real Bolina mesh resolves as *Unresolved/unsupportable*
   under BE-EVID-09b — by design, since its origin resolves to nothing. Detached receipts
-  are for detached verification (`prova verify`), not for raising claim ceilings in-mesh.
+  are for detached verification (`lastro verify`), not for raising claim ceilings in-mesh.
 
 **Any second deviation from SPEC bytes requires a written decision entry in this repo
 (PREMORTEM item 3). There are currently zero others.**
 
-## 2. Capture contract (`prova run`)
+## 2. Capture contract (`lastro run`)
 
-`prova run [flags] -- command args...` executes the command and observes it:
+`lastro run [flags] -- command args...` executes the command and observes it:
 
 - **What is captured:** stdout and stderr, byte-exact, merged in the order this process
   observed them. Output is streamed through to the terminal unchanged — wrapping a CI step
   never hides its logs. The exit code is folded into the observed stream as a canonical
-  trailer line (`[prova] exit-status=N`): a Span carries no exit field (in-mesh that is
+  trailer line (`[lastro] exit-status=N`): a Span carries no exit field (in-mesh that is
   `Effect.exit_code`'s job), so detached receipts cover the exit code with the digest, and
   it is readable whenever the output is saved (`--save-output`; recommended as a CI
   artifact next to the receipt).
@@ -51,12 +51,12 @@ format change. Consequences, stated honestly:
   resource_id.
 - **Size cap:** captured output above the cap (default 8 MiB, `--max-output`) produces
   **no receipt** — never a receipt of a truncation. An observation that was not fully
-  captured is not an observation (BE-EVID-14, imported). `prova run` then exits 125.
+  captured is not an observation (BE-EVID-14, imported). `lastro run` then exits 125.
 - **method_id is 1 (subprocess), always.** There is no flag to choose it: the method is a
   compile-time constant of the code path (BE-EVID-11 — no interface accepts a method,
   class, or confidence). Likewise `volatility` is fixed at `volatile`: a command's outcome
   is state that can change under us, and fail-closed is the profile's default posture.
-- **Exit code contract:** `prova run` exits with the child's exit code when the receipt was
+- **Exit code contract:** `lastro run` exits with the child's exit code when the receipt was
   written (red and green runs both get receipts — PREMORTEM item 7); **125** when the
   child ran but no receipt could be produced (cap exceeded, key unreadable, disk error) —
   loudly, so a missing receipt can never look like a passing step; **127** when the child
@@ -83,11 +83,11 @@ e.g. bol:c3efd641bfa0582f/git/bolina/90e46a5.../check/zig-build-test
 
 The commit SHA inside the resource is the freshness anchor detached receipts otherwise
 lack. Repo names are lowercased and sanitized to the grammar's charset. The path may carry
-the placeholder `{sha}`, which `prova run` substitutes with `git rev-parse HEAD` — derived
+the placeholder `{sha}`, which `lastro run` substitutes with `git rev-parse HEAD` — derived
 by the tool itself, never from a hand-written CI variable, so the anchor cannot be forged
 by a typo (fase-3 acceptance criterion).
 
-## 4. Verification (`prova verify`)
+## 4. Verification (`lastro verify`)
 
 Full verification takes the receipt, the executor's certificate, and the trusted CA keys:
 
@@ -106,7 +106,7 @@ expired certificate still proves what it signed while valid. The report *shows* 
 validity window and whether `observed_at` falls inside it; it does not enforce the wall
 clock. `observed_at` is informative only, as everywhere in the protocol (BE-ENV-01).
 
-**Unanchored mode:** `prova verify` without `--cert` checks only step 1 and reports the
+**Unanchored mode:** `lastro verify` without `--cert` checks only step 1 and reports the
 receipt as `UNANCHORED` — the signature is internally valid but bound to no identity.
 Useful before a CA exists; never presentable as a verified receipt, and the output says so.
 
@@ -130,7 +130,7 @@ output.** What that is worth depends on where the key lives:
 
 ## 6. Keys and certificates
 
-`prova keygen` writes the Bolina node key layout (`sig.key`/`sig.pub`,
+`lastro keygen` writes the Bolina node key layout (`sig.key`/`sig.pub`,
 `static.key`/`static.pub`, 32-byte raw, 0600, dir 0700) so the standard Bolina CA tooling
 issues the executor certificate directly: `bolina ca issue --role executor …` against the
 same directory. Executor certs are capped at 30 days (BE-REV-01); the CI integration must

@@ -1,4 +1,4 @@
-module github.com/iamloonix/prova
+module github.com/iamloonix/lastro
 
 go 1.26.3
 

@@ -1,9 +1,9 @@
-// Command prova mints and verifies detached Bolina receipts
+// Command lastro mints and verifies detached Bolina receipts
 // (RECEIPT-PROFILE.md). Three subcommands:
 //
-//	prova keygen --dir DIR
-//	prova run --key DIR --namespace ns --path p [flags] -- command args...
-//	prova verify FILE.receipt [--cert cert.bin] [--ca ca.pub]...
+//	lastro keygen --dir DIR
+//	lastro run --key DIR --namespace ns --path p [flags] -- command args...
+//	lastro verify FILE.receipt [--cert cert.bin] [--ca ca.pub]...
 //
 // Exit codes: run exits with the child's code when the receipt was
 // written, 125 when the child ran but no receipt could be produced, 127
@@ -28,7 +28,7 @@ import (
 
 	"golang.org/x/crypto/curve25519"
 
-	"github.com/iamloonix/prova/wire"
+	"github.com/iamloonix/lastro/wire"
 )
 
 const (
@@ -62,12 +62,12 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprint(os.Stderr, `prova — signed receipts for AI/CI work (Bolina spans, detached profile)
+	fmt.Fprint(os.Stderr, `lastro — signed receipts for AI/CI work (Bolina spans, detached profile)
 
-  prova keygen --dir DIR
-  prova run --key DIR --namespace NS --path P [--trace HEX32] [--out FILE]
+  lastro keygen --dir DIR
+  lastro run --key DIR --namespace NS --path P [--trace HEX32] [--out FILE]
             [--max-output N] [--save-output FILE] -- command args...
-  prova verify FILE.receipt [--cert cert.bin] [--ca ca.pub]...
+  lastro verify FILE.receipt [--cert cert.bin] [--ca ca.pub]...
 `)
 }
 
@@ -82,31 +82,31 @@ func cmdKeygen(args []string) int {
 	dir := fs.String("dir", "", "key directory to create")
 	fs.Parse(args)
 	if *dir == "" {
-		fmt.Fprintln(os.Stderr, "prova keygen: --dir is required")
+		fmt.Fprintln(os.Stderr, "lastro keygen: --dir is required")
 		return verifyUsage
 	}
 	if err := os.MkdirAll(*dir, 0o700); err != nil {
-		fmt.Fprintf(os.Stderr, "prova keygen: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro keygen: %v\n", err)
 		return 1
 	}
 	sigKeyPath := filepath.Join(*dir, "sig.key")
 	if _, err := os.Stat(sigKeyPath); err == nil {
-		fmt.Fprintf(os.Stderr, "prova keygen: %s exists; refusing to overwrite key material\n", sigKeyPath)
+		fmt.Fprintf(os.Stderr, "lastro keygen: %s exists; refusing to overwrite key material\n", sigKeyPath)
 		return 1
 	}
 	var sigSeed, kexSecret [32]byte
 	if _, err := rand.Read(sigSeed[:]); err != nil {
-		fmt.Fprintf(os.Stderr, "prova keygen: entropy: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro keygen: entropy: %v\n", err)
 		return 1
 	}
 	if _, err := rand.Read(kexSecret[:]); err != nil {
-		fmt.Fprintf(os.Stderr, "prova keygen: entropy: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro keygen: entropy: %v\n", err)
 		return 1
 	}
 	sigPub := ed25519.NewKeyFromSeed(sigSeed[:]).Public().(ed25519.PublicKey)
 	kexPub, err := curve25519.X25519(kexSecret[:], curve25519.Basepoint)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "prova keygen: x25519: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro keygen: x25519: %v\n", err)
 		return 1
 	}
 	files := []struct {
@@ -120,13 +120,13 @@ func cmdKeygen(args []string) int {
 	}
 	for _, f := range files {
 		if err := os.WriteFile(filepath.Join(*dir, f.name), f.data, 0o600); err != nil {
-			fmt.Fprintf(os.Stderr, "prova keygen: write %s: %v\n", f.name, err)
+			fmt.Fprintf(os.Stderr, "lastro keygen: write %s: %v\n", f.name, err)
 			return 1
 		}
 	}
-	fmt.Printf("prova: keys written to %s\n", *dir)
-	fmt.Printf("prova: executor fingerprint %s\n", wire.Fingerprint(sigPub))
-	fmt.Println("prova: request an executor certificate with: bolina ca issue --role executor ...")
+	fmt.Printf("lastro: keys written to %s\n", *dir)
+	fmt.Printf("lastro: executor fingerprint %s\n", wire.Fingerprint(sigPub))
+	fmt.Println("lastro: request an executor certificate with: bolina ca issue --role executor ...")
 	return 0
 }
 
@@ -168,44 +168,44 @@ func cmdRun(args []string) int {
 		}
 	}
 	if sep < 0 || sep == len(args)-1 {
-		fmt.Fprintln(os.Stderr, "prova run: missing '-- command args...'")
+		fmt.Fprintln(os.Stderr, "lastro run: missing '-- command args...'")
 		return verifyUsage
 	}
 	child := args[sep+1:]
 
 	fs := flag.NewFlagSet("run", flag.ExitOnError)
-	keyDir := fs.String("key", "", "key directory (from prova keygen)")
+	keyDir := fs.String("key", "", "key directory (from lastro keygen)")
 	namespace := fs.String("namespace", "", "resource namespace ([a-z0-9-], <=32)")
 	resPath := fs.String("path", "", "resource path ([a-z0-9-._/], <=180)")
 	traceHex := fs.String("trace", "", "optional 16-byte trace id, hex (groups runs)")
-	outPath := fs.String("out", "prova.receipt", "receipt output file")
+	outPath := fs.String("out", "lastro.receipt", "receipt output file")
 	maxOutput := fs.Int("max-output", defaultMaxOutput, "capture cap in bytes; exceeding it produces no receipt")
 	saveOutput := fs.String("save-output", "", "also write the captured stream (with trailer) to this file")
 	fs.Parse(args[:sep])
 
 	if *keyDir == "" || *namespace == "" || *resPath == "" {
-		fmt.Fprintln(os.Stderr, "prova run: --key, --namespace and --path are required")
+		fmt.Fprintln(os.Stderr, "lastro run: --key, --namespace and --path are required")
 		return verifyUsage
 	}
 	resolvedPath, err := resolveShaTemplate(*resPath, gitHead)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "prova run: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro run: %v\n", err)
 		return verifyUsage
 	}
 	if err := validateResource(*namespace, resolvedPath); err != nil {
-		fmt.Fprintf(os.Stderr, "prova run: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro run: %v\n", err)
 		return verifyUsage
 	}
 	seed, err := os.ReadFile(filepath.Join(*keyDir, "sig.key"))
 	if err != nil || len(seed) != ed25519.SeedSize {
-		fmt.Fprintf(os.Stderr, "prova run: cannot read signing key: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro run: cannot read signing key: %v\n", err)
 		return exitNoReceipt
 	}
 	priv := ed25519.NewKeyFromSeed(seed)
 	pub := priv.Public().(ed25519.PublicKey)
 	resource := "bol:" + wire.Fingerprint(pub) + "/" + *namespace + "/" + resolvedPath
 	if len(resource) > wire.MaxResource {
-		fmt.Fprintln(os.Stderr, "prova run: resource id exceeds 256 bytes")
+		fmt.Fprintln(os.Stderr, "lastro run: resource id exceeds 256 bytes")
 		return verifyUsage
 	}
 
@@ -213,12 +213,12 @@ func cmdRun(args []string) int {
 	if *traceHex != "" {
 		b, err := hex.DecodeString(*traceHex)
 		if err != nil || len(b) != wire.LenTraceID {
-			fmt.Fprintln(os.Stderr, "prova run: --trace must be 32 hex chars")
+			fmt.Fprintln(os.Stderr, "lastro run: --trace must be 32 hex chars")
 			return verifyUsage
 		}
 		copy(traceID[:], b)
 	} else if _, err := rand.Read(traceID[:]); err != nil {
-		fmt.Fprintf(os.Stderr, "prova run: entropy: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro run: entropy: %v\n", err)
 		return exitNoReceipt
 	}
 
@@ -229,7 +229,7 @@ func cmdRun(args []string) int {
 	cmd.Stdout = io.MultiWriter(os.Stdout, cap)
 	cmd.Stderr = io.MultiWriter(os.Stderr, cap)
 	if err := cmd.Start(); err != nil {
-		fmt.Fprintf(os.Stderr, "prova run: cannot start %q: %v\n", child[0], err)
+		fmt.Fprintf(os.Stderr, "lastro run: cannot start %q: %v\n", child[0], err)
 		return exitNoStart
 	}
 	exitCode := 0
@@ -238,7 +238,7 @@ func cmdRun(args []string) int {
 		if errors.As(err, &ee) {
 			exitCode = ee.ExitCode()
 		} else {
-			fmt.Fprintf(os.Stderr, "prova run: wait: %v\n", err)
+			fmt.Fprintf(os.Stderr, "lastro run: wait: %v\n", err)
 			return exitNoReceipt
 		}
 	}
@@ -246,17 +246,17 @@ func cmdRun(args []string) int {
 	// BE-EVID-14: an observation that was not fully captured is not an
 	// observation. No receipt, loud exit.
 	if cap.exceeded {
-		fmt.Fprintf(os.Stderr, "prova run: output exceeded %d bytes; NO receipt written (child exited %d)\n", *maxOutput, exitCode)
+		fmt.Fprintf(os.Stderr, "lastro run: output exceeded %d bytes; NO receipt written (child exited %d)\n", *maxOutput, exitCode)
 		return exitNoReceipt
 	}
 
 	// Canonical trailer folds the exit code into the observed stream
 	// (RECEIPT-PROFILE.md §2): covered by the digest, readable whenever
 	// the output is saved.
-	captured := append(cap.buf, []byte(fmt.Sprintf("\n[prova] exit-status=%d\n", exitCode))...)
+	captured := append(cap.buf, []byte(fmt.Sprintf("\n[lastro] exit-status=%d\n", exitCode))...)
 	if *saveOutput != "" {
 		if err := os.WriteFile(*saveOutput, captured, 0o644); err != nil {
-			fmt.Fprintf(os.Stderr, "prova run: save-output: %v; NO receipt written\n", err)
+			fmt.Fprintf(os.Stderr, "lastro run: save-output: %v; NO receipt written\n", err)
 			return exitNoReceipt
 		}
 	}
@@ -271,7 +271,7 @@ func cmdRun(args []string) int {
 		Digest:     wire.Blake2s256(captured),
 	}
 	if _, err := rand.Read(f.SpanID[:]); err != nil {
-		fmt.Fprintf(os.Stderr, "prova run: entropy: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro run: entropy: %v\n", err)
 		return exitNoReceipt
 	}
 	copy(f.Executor[:], pub)
@@ -279,14 +279,14 @@ func cmdRun(args []string) int {
 
 	receipt, err := wire.BuildSpan(&f, priv)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "prova run: build span: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro run: build span: %v\n", err)
 		return exitNoReceipt
 	}
 	if err := os.WriteFile(*outPath, receipt, 0o644); err != nil {
-		fmt.Fprintf(os.Stderr, "prova run: write receipt: %v; child exited %d\n", err, exitCode)
+		fmt.Fprintf(os.Stderr, "lastro run: write receipt: %v; child exited %d\n", err, exitCode)
 		return exitNoReceipt
 	}
-	fmt.Fprintf(os.Stderr, "prova: receipt %s · %s · exit %d · %d bytes observed · digest %s…\n",
+	fmt.Fprintf(os.Stderr, "lastro: receipt %s · %s · exit %d · %d bytes observed · digest %s…\n",
 		*outPath, resource, exitCode, len(captured), hex.EncodeToString(f.Digest[:8]))
 	return exitCode
 }
@@ -367,21 +367,21 @@ func cmdVerify(args []string) int {
 	fs.Var(&caPaths, "ca", "trusted CA public key file (repeatable)")
 	fs.Parse(args)
 	if fs.NArg() != 1 {
-		fmt.Fprintln(os.Stderr, "prova verify: exactly one receipt file")
+		fmt.Fprintln(os.Stderr, "lastro verify: exactly one receipt file")
 		return verifyUsage
 	}
 	raw, err := os.ReadFile(fs.Arg(0))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "prova verify: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro verify: %v\n", err)
 		return verifyInvalid
 	}
 	span, err := wire.ParseSpan(raw)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "prova verify: INVALID: receipt does not parse: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro verify: INVALID: receipt does not parse: %v\n", err)
 		return verifyInvalid
 	}
 	if err := span.VerifySig(); err != nil {
-		fmt.Fprintf(os.Stderr, "prova verify: INVALID: signature: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro verify: INVALID: signature: %v\n", err)
 		return verifyInvalid
 	}
 	class, ceiling := wire.ClassOf(span.MethodID)
@@ -392,29 +392,29 @@ func cmdVerify(args []string) int {
 	}
 	certRaw, err := os.ReadFile(*certPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "prova verify: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro verify: %v\n", err)
 		return verifyInvalid
 	}
 	cert, err := wire.ParseCert(certRaw)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "prova verify: INVALID: cert does not parse: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro verify: INVALID: cert does not parse: %v\n", err)
 		return verifyInvalid
 	}
 	if len(caPaths) == 0 {
-		fmt.Fprintln(os.Stderr, "prova verify: --cert requires at least one --ca")
+		fmt.Fprintln(os.Stderr, "lastro verify: --cert requires at least one --ca")
 		return verifyUsage
 	}
 	var trusted [][]byte
 	for _, p := range caPaths {
 		k, err := os.ReadFile(p)
 		if err != nil || len(k) != wire.LenCAKey {
-			fmt.Fprintf(os.Stderr, "prova verify: bad CA key %s\n", p)
+			fmt.Fprintf(os.Stderr, "lastro verify: bad CA key %s\n", p)
 			return verifyUsage
 		}
 		trusted = append(trusted, k)
 	}
 	if err := wire.VerifyReceipt(span, cert, trusted); err != nil {
-		fmt.Fprintf(os.Stderr, "prova verify: INVALID: %v\n", err)
+		fmt.Fprintf(os.Stderr, "lastro verify: INVALID: %v\n", err)
 		return verifyInvalid
 	}
 	printReport(span, class, ceiling, "VERIFIED", cert)

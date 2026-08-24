@@ -1,4 +1,4 @@
-// Package wire implements the Bolina wire format for the structures Prova
+// Package wire implements the Bolina wire format for the structures Lastro
 // consumes: Cert (SPEC §3.1) and Span (SPEC §7.1), plus the BE-SIG-01
 // domain-separated signature verification they require.
 //

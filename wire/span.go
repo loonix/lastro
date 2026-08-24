@@ -10,7 +10,7 @@ package wire
 // TBS is every byte from the span's start up to (not including) sig; the
 // signature is Ed25519 over (DomainSpan || TBS).
 //
-// Detached-profile note (Prova, RECEIPT-PROFILE.md): a receipt produced
+// Detached-profile note (Lastro, RECEIPT-PROFILE.md): a receipt produced
 // outside a mesh carries origin = 32 zero bytes, meaning "no causal
 // anchor". The wire bytes are unchanged SPEC bytes; the zeroed origin is
 // a profile convention, not a format deviation.

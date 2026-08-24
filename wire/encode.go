@@ -6,7 +6,7 @@ import (
 	"errors"
 )
 
-// Encoders for the structures Prova mints. Encoding is the exact inverse
+// Encoders for the structures Lastro mints. Encoding is the exact inverse
 // of the parsers in this package: the round-trip and vector re-encode
 // tests in encode_test.go pin that property.
 
