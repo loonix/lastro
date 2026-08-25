@@ -54,6 +54,12 @@ func SignTagged(tag byte, tbs []byte, priv ed25519.PrivateKey) []byte {
 	return ed25519.Sign(priv, msg)
 }
 
+// SignTaggedSeed signs (tag || tbs) with an Ed25519 key derived from a
+// 32-byte seed — the on-disk sig.key form Bolina uses.
+func SignTaggedSeed(tag byte, tbs []byte, seed [32]byte) []byte {
+	return SignTagged(tag, tbs, ed25519.NewKeyFromSeed(seed[:]))
+}
+
 // Blake2s256 is the protocol hash (SPEC §2.1).
 func Blake2s256(data []byte) [32]byte {
 	return blake2s.Sum256(data)

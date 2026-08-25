@@ -214,6 +214,32 @@ func (r *Refusal) VerifySigAgainst(sender []byte) error {
 	return VerifySigned(DomainRefusal, r.TBS, r.Sig, sender)
 }
 
+// BuildSignedEnvelope serializes an envelope and signs it: TBS ||
+// Ed25519 over (DomainEnvelope || TBS). Used by the interop harness to
+// put a real Intent on the wire (SPEC §6.2). channelID/sender are 32
+// bytes; parents is parentCount*32 flat.
+func BuildSignedEnvelope(version byte, channelID, sender []byte, seq uint64, parents []byte, parentCount byte, ts uint64, bodyType byte, body []byte, sigSeed [32]byte) ([]byte, error) {
+	if len(channelID) != LenChannelID || len(sender) != LenPubkey || int(parentCount)*LenParent != len(parents) {
+		return nil, ErrFieldBounds
+	}
+	if int64(len(body)) > MaxBody {
+		return nil, ErrOversize
+	}
+	out := []byte{version}
+	out = append(out, channelID...)
+	out = append(out, sender...)
+	out = binary.BigEndian.AppendUint64(out, seq)
+	out = append(out, parentCount)
+	out = append(out, parents...)
+	out = binary.BigEndian.AppendUint64(out, ts)
+	out = append(out, bodyType)
+	out = binary.BigEndian.AppendUint32(out, uint32(len(body)))
+	out = append(out, body...)
+	// out is now the TBS; sign over (DomainEnvelope || TBS).
+	sig := SignTaggedSeed(DomainEnvelope, out, sigSeed)
+	return append(out, sig...), nil
+}
+
 // EncodeIntentBody serializes an Intent body (used to build the envelope
 // bodies the grant-chain tests exercise; the digest a Grant binds is
 // BLAKE2s over Action alone, per BE-GRANT-02).
