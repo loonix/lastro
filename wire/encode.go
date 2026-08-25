@@ -67,7 +67,7 @@ type CertFields struct {
 	KexPubkey [LenKexPubkey]byte
 	NotBefore uint64
 	NotAfter  uint64
-	Name      []byte   // <= MaxName
+	Name      []byte    // <= MaxName
 	ScopeIDs  [][8]byte // <= MaxScope entries
 }
 

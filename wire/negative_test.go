@@ -96,11 +96,11 @@ func TestCertCACountZero(t *testing.T) {
 // are read (a hand-built minimal prefix suffices).
 func TestCertScopeOversize(t *testing.T) {
 	var b []byte
-	b = append(b, 3, 0x03)              // version, role_bits
-	b = append(b, make([]byte, 64)...)  // sig_pubkey + kex_pubkey
-	b = append(b, make([]byte, 16)...)  // not_before + not_after
+	b = append(b, 3, 0x03)                  // version, role_bits
+	b = append(b, make([]byte, 64)...)      // sig_pubkey + kex_pubkey
+	b = append(b, make([]byte, 16)...)      // not_before + not_after
 	b = binary.BigEndian.AppendUint16(b, 0) // name_len = 0
-	b = append(b, MaxScope+1)           // scope_count = 9
+	b = append(b, MaxScope+1)               // scope_count = 9
 	if _, err := ParseCert(b); err != ErrOversize {
 		t.Fatalf("ParseCert(scope_count=9) = %v, want ErrOversize", err)
 	}

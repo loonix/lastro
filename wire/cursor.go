@@ -59,6 +59,16 @@ func (c *cursor) u16be() (uint16, error) {
 	return v, nil
 }
 
+func (c *cursor) u32be() (uint32, error) {
+	if err := c.need(4); err != nil {
+		return 0, err
+	}
+	v := uint32(c.buf[c.pos])<<24 | uint32(c.buf[c.pos+1])<<16 |
+		uint32(c.buf[c.pos+2])<<8 | uint32(c.buf[c.pos+3])
+	c.pos += 4
+	return v, nil
+}
+
 func (c *cursor) u64be() (uint64, error) {
 	if err := c.need(8); err != nil {
 		return 0, err
