@@ -1,0 +1,16 @@
+interop: [A] initiation sent (144 bytes)
+interop: [A] handshake complete · transcript h=dd3ac2c367be… · daemon index=0x00000000 (echo=0x51530001)
+interop: [B] binding frame sent (278 bytes cert)
+interop: [B] daemon binding verified · daemon fp=25c384cec7833681 · chain clock-free OK
+interop: [C] intent_id=d9a44fe4f30c820586ff73577f33f676
+interop: [C] Intent envelope sent (249 bytes) · resource bol:25c384cec7833681/interop/demo
+interop: [C] check the daemon metrics for bolina_intents_admitted_total
+=== GET /v1/intents/d9a44fe4f30c820586ff73577f33f676 (estado na table partilhada) ===
+pending
+=== /metrics ===
+# TYPE bolina_intents_admitted_total counter
+bolina_intents_admitted_total 0
+bolina_intents_refused_conflict_total 0
+bolina_intents_refused_unprocessable_total 0
+bolina_control_auth_refused_total 0
+=== FIM ===

@@ -1,0 +1,5 @@
+bolina: identity fingerprint 25c384cec7833681
+bolina: kex fingerprint e76f1054a2c85e50 (2 trusted CAs, cert loaded)
+bolina: node up on 127.0.0.1:7420, ledger /home/loonix/srv/interop/node-daemon/ledger.bin, entering recv loop
+bolina: control plane on 127.0.0.1:7421
+bolina: shutdown complete, ledger consistent
