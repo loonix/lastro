@@ -23,6 +23,13 @@ import (
 	"github.com/loonix/lastro/wire"
 )
 
+// SPEC §4.1a type-2 response index offsets: sender_index (responder's own
+// slot) at byte 4, receiver_index (echo of our sender_index) at byte 8.
+const (
+	off2SenderConformant   = 4
+	off2ReceiverConformant = 8
+)
+
 func readKey(path string) ([32]byte, error) {
 	var k [32]byte
 	b, err := os.ReadFile(path)
@@ -126,15 +133,17 @@ func main() {
 		fail("ReadResponse", err)
 	}
 	res := initiator.Finalize()
-	// Transport packets to the daemon carry the daemon's OWN local session
-	// index as receiver_index — the value it admits the session under and
-	// looks up on. In the type-2 response that is the receiver_index field
-	// (offset 8); offset 4 echoes our sender_index. (The reference's
-	// handshake.zig fills these in an order worth confirming against SPEC
-	// §4.1a, but offset 8 is the daemon's own slot either way.)
-	senderEcho := binary.BigEndian.Uint32(buf[4:8])
-	daemonIndex := binary.BigEndian.Uint32(buf[8:12])
-	fmt.Printf("interop: [A] handshake complete · transcript h=%x… · daemon slot=0x%08x (echo=0x%08x)\n", res.H[:6], daemonIndex, senderEcho)
+	// SPEC §4.1a conformant read: the type-2 response carries the
+	// responder's own session index in sender_index (offset 4); offset 8
+	// echoes our initiation sender_index. Transport packets to the daemon
+	// use the daemon's sender_index as their receiver_index. (An earlier
+	// interop read offset 8 to accommodate the handshake.zig index swap
+	// this project fixed in e4fd0d4 — a strictly conformant initiator
+	// like this one rejects a response whose announced index != slot,
+	// which is exactly the defect the live handshake surfaced.)
+	daemonIndex := binary.BigEndian.Uint32(buf[off2SenderConformant:])
+	senderEcho := binary.BigEndian.Uint32(buf[off2ReceiverConformant:])
+	fmt.Printf("interop: [A] handshake complete · transcript h=%x… · daemon index=0x%08x (echo=0x%08x)\n", res.H[:6], daemonIndex, senderEcho)
 
 	// --- Binding: send ours, expect theirs. ---
 	frame := wire.BuildBindingFrame(goCert, goSigSeed, res.H)
