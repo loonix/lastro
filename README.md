@@ -111,3 +111,7 @@ Each rung stands alone; none requires the next.
   demands of the design
 - `evidence/` — real receipts from the protocol's own gate closures, kept in
   the repo so verification needs no attachments
+
+## License
+
+Apache-2.0 — the same license as the Bolina reference implementation.
